@@ -16,7 +16,7 @@ export default function Home() {
 
   useEffect(()=>{
     checkAuth();
-  },[])
+  },[checkAuth])
 
   return (
     <main className="bg-[#D6D6D6] container mx-auto   py-8 grid md:grid-cols-[250px_1fr_300px] gap-8">

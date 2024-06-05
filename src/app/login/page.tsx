@@ -31,7 +31,7 @@ export interface login {
   password: string;
 }
 
-const loginPage = () => {
+const LoginPage = () => {
   // const { tokens, setTokens } = useMedia();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const router = useRouter();
@@ -43,7 +43,7 @@ const loginPage = () => {
     },
   });
 
-  const loginMutation = useMutation({
+  const LoginMutation = useMutation({
     mutationFn: loginPost,
     onSuccess: (res) => {
       console.log(res);
@@ -67,7 +67,7 @@ const loginPage = () => {
 
   const handleLogin = (values: z.infer<typeof loginSchema>) => {
     const { userName, password } = values;
-    loginMutation.mutate({ userName, password });
+    LoginMutation.mutate({ userName, password });
   };
 
   const togglePassword = () => {
@@ -148,7 +148,7 @@ const loginPage = () => {
           </Form>
           <div>
             <p className="text-sm text-center mb-8">
-              Dont't have an account?
+              `Don&apos;s have an account?`
               <span
                 onClick={() => {
                   router.push("/signup");
@@ -167,4 +167,4 @@ const loginPage = () => {
   );
 };
 
-export default loginPage;
+export default LoginPage;

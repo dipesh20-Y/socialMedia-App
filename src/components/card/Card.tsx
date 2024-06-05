@@ -3,6 +3,7 @@ import { Avatar } from "../ui/avatar";
 import { AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { HeartIcon, MessageCircleIcon } from "lucide-react";
+import Image from "next/image";
 
 const Card = () => {
   return (
@@ -19,7 +20,7 @@ const Card = () => {
       </div>
 
       <div className="shadow-lg">
-        <img
+        <Image
           src="/landscape.jpg"
           width={600}
           height={4000}
