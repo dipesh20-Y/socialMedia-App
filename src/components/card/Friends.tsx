@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback } from '../ui/avatar'
 
 
-const Friends = (users:any) => {
+const Friends = (user:any) => {
 
+  console.log(user)
   
   return (
     <div className="grid my-4 hover:bg-white hover:rounded-lg hover:translate-x-1   ">
@@ -13,8 +14,8 @@ const Friends = (users:any) => {
         <AvatarFallback>J</AvatarFallback>
       </Avatar>
       <div>
-      <div className="text-md">{users.author} </div>
-        <div className="text-sm text-gray-500">@Jude</div>
+      <div className="text-md">{user.user. author} </div>
+        <div className="text-sm text-gray-500">@{user.user.username}</div>
       
       </div>
     </div>

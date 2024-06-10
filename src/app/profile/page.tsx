@@ -1,27 +1,39 @@
-'use client'
+"use client";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HeartIcon, MessageCircleIcon } from "lucide-react";
 import Card from "@/components/card/Card";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAuthor } from "@/api/query";
+import { usePosts } from "@/context/PostContext";
+import moment from "moment";
 
 const Profile = () => {
+  const { posts } = usePosts();
+  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const { data, isLoading, isSuccess, error } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchAuthor,
+  });
 
+  useEffect(() => {
+    if (data && posts) {
+      const filtered = posts.filter((post) => post.userId === data.id);
+      setUserPosts(filtered);
+    }
+  }, [data, posts]);
 
-  const {data, isLoading ,isSuccess,error} = useQuery({
-      queryKey:['users'],
-      queryFn: fetchAuthor
-  })
-
+  if (isSuccess) {
+    console.log(data);
+    console.log(posts);
+  }
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
   if (error) {
-    return <div>{`error occured: ${error}`}</div>
+    return <div>{`error occurred: ${error}`}</div>;
   }
-
 
   return (
     <div className="bg-gray-100 min-h-screen flex justify-center items-start p-4 md:p-8">
@@ -48,18 +60,31 @@ const Profile = () => {
             </div>
             <div className="ml-4 md:ml-6 flex-1">
               <h2 className="text-lg font-bold md:text-2xl">{data?.author}</h2>
-              <p className="text-gray-500 text-sm md:text-base">@{data?.username}</p>
+              <p className="text-gray-500 text-sm md:text-base">
+                @{data?.username}
+              </p>
             </div>
           </div>
-          <div className="mt-6 md:mt-6 space-y-4 md:space-y-6">
-            <Card />
-            <Card />
+
+          <div className="grid gap-4">
+            {userPosts &&
+              userPosts.map((post) => (
+                <Card
+                  key={post.id}
+                  id={post.id}
+                  content={post.content}
+                  date={moment(post.createdAt).fromNow()}
+                  author={data.author}
+                  username={data.username}
+                  userId={post.userId}
+                  authorId={data.id}
+                />
+              ))}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
 
 export default Profile;

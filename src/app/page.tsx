@@ -1,35 +1,67 @@
-'use client'
+"use client";
 import Card from "@/components/card/Card";
 import Post from "@/components/card/PostBody";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import Link from "next/link";
 import Friends from "@/components/card/Friends";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/middleware/middleware";
-import { fetchAllUsers } from "@/api/query";
+import {  fetchAllUsers } from "@/api/query";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { usePosts } from "@/context/PostContext";
+import moment from 'moment'
 
 export default function Home() {
-   
-  const {checkAuth} = useAuth()
-   
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { posts } = usePosts();
 
-  useEffect(()=>{
-    checkAuth();
-  },[checkAuth])
+  console.log(posts)
+  
+  //sorting posts in descending order
+  const sortedPosts = posts.sort((a,b) => new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime())
+
+  const { data, isLoading, isSuccess, error } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchAllUsers,
+  });
+
+  
+
+  useEffect(() => {
+    console.log(isAuthenticated)
+    if (isAuthenticated != undefined && !isAuthenticated) {
+      router.push("login");
+    }
+  }, [isAuthenticated, router]);
+
+  if (isLoading || !isAuthenticated) {
+    return <div>Loading....</div>;
+  }
+
+  if (error) {
+    return <div>Error loading data</div>;
+  }
+
+  if (isSuccess) {
+    console.log(data);
+  }
+
+  // Ensure `data` is an array before mapping
+  const usersArray = Array.isArray(data) ? data : [];
 
   return (
-    <main className="bg-[#D6D6D6] container mx-auto   py-8 grid md:grid-cols-[250px_1fr_300px] gap-8">
+    <main className="bg-[#D6D6D6] container mx-auto py-8 grid md:grid-cols-[250px_1fr_300px] gap-8">
       <div className="bg-gray-100 rounded-lg p-4 h-fit ">
         <nav className="flex flex-col gap-4">
           <Link
-            className="hover:underline font-bold  hover:translate-x-1 hover:scale-105 "
+            className="hover:underline font-bold  hover:translate-x-1 hover:scale-105"
             href="/"
           >
             Home
           </Link>
           <Link
-            className="hover:underline  font-bold hover:translate-x-1 hover:scale-105"
+            className="hover:underline font-bold hover:translate-x-1 hover:scale-105"
             href="/"
           >
             Explore
@@ -58,19 +90,24 @@ export default function Home() {
       <div>
         <Post />
         <div className="grid gap-4">
-          <Card />
-          <Card />
-          <Card />
-          <Card />
+          {sortedPosts &&
+            sortedPosts.map((post) => (
+              <Card
+                key={post.id}
+                id={post.id}
+                content={post.content}
+                date={moment(post.createdAt).fromNow()}
+                author={post.user.author}
+                username={post.user.username}
+              />
+            ))}
         </div>
       </div>
       <div className="bg-stone-100 rounded-lg p-4 h-fit">
         <h2 className="text-lg font-bold font-mono mb-4">Friends</h2>
-       {/* {users && (
-        users.map((user)=>
-        <Friends users={users} />
-        )
-       )} */}
+        {usersArray?.map((user: any) => (
+          <Friends key={user.id} id={user.id} user={user} />
+        ))}
       </div>
     </main>
   );

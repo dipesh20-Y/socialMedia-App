@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { postAuth } from "@/api/query";
 import FormFieldComponent from "@/components/form/formField";
+import { useToast } from "@/components/ui/use-toast";
 
 export interface signup {
   author: string;
@@ -49,6 +50,7 @@ const signupSchema = z
   );
 
 const SignupPage = () => {
+  const {toast} = useToast()
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const router = useRouter();
@@ -68,6 +70,9 @@ const SignupPage = () => {
     onSuccess: (data) => {
       console.log("account created successfully!!");
       router.push("/login");
+      toast({
+        description:'Signup successful'
+      })
       console.log(data);
     },
     onError: (error) => {
@@ -208,7 +213,7 @@ const SignupPage = () => {
                   <div>
                     <Button
                       type="submit"
-                      className="w-full my-8 bg-blue-500 mt-8  "
+                      className="w-full my-8 bg-[#1a3b5d] mt-8  "
                     >
                       Sign up
                     </Button>

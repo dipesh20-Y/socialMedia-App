@@ -1,10 +1,12 @@
 "use client";
 import React, { useState } from "react";
 import * as z from "zod";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-// import { useMedia } from "@/context/context";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
+
 import {
   Form,
   FormField,
@@ -15,11 +17,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { EyeOff, Eye } from "lucide-react";
-import { loginPost } from "@/api/query";
-import { useMutation } from "@tanstack/react-query";
 import FormFieldComponent from "@/components/form/formField";
+import { loginPost } from "@/api/query";
 
 const loginSchema = z.object({
   userName: z.string(),
@@ -32,7 +32,7 @@ export interface login {
 }
 
 const LoginPage = () => {
-  // const { tokens, setTokens } = useMedia();
+  const { toast } = useToast();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const router = useRouter();
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -46,27 +46,28 @@ const LoginPage = () => {
   const LoginMutation = useMutation({
     mutationFn: loginPost,
     onSuccess: (res) => {
-      console.log(res);
+      console.log("Response:", res);
       if (res.status === 200) {
         const { accessToken, refreshToken, role } = res.data;
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refresh", refreshToken);
         localStorage.setItem("role", role);
-        
-
-        // sessionData && setTokens(sessionData);
-        router.push("/");
+        toast({
+          description: "Login Successful!",
+        });
+        router.push("/"); // This should now correctly navigate to the home page
+      } else {
+        console.log("Unexpected response status:", res.status);
       }
-
-      console.log("login successful");
     },
     onError: (error) => {
-      console.log("error occured:", error);
+      console.log("Error occurred during login:", error);
     },
   });
 
   const handleLogin = (values: z.infer<typeof loginSchema>) => {
     const { userName, password } = values;
+    console.log("Logging in with:", { userName, password });
     LoginMutation.mutate({ userName, password });
   };
 
@@ -76,18 +77,14 @@ const LoginPage = () => {
 
   return (
     <div className="h-screen w-full bg-gradient-to-r from-[#ffafbd] to-[#ffc3a0]">
-      {/* <div className="container mx-auto h-screen max-w-5xl"> */}
-      <div className="flex justify-center items-center  pl-8 py-8">
-        <div className="flex flex-col mt-24  max-w-lg w-full border shadow-2xl border-gray-400  pt-8 bg-[#F4F4F4] rounded-2xl">
-          <div className="text-center mb-8 ">
-            <h1 className="text-3xl text-center font-bold">Welcome back </h1>
+      <div className="flex justify-center items-center pl-8 py-8">
+        <div className="flex flex-col mt-24 max-w-lg w-full border shadow-2xl border-gray-400 pt-8 bg-[#F4F4F4] rounded-2xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl text-center font-bold">Welcome back</h1>
             <span>Please enter your information to sign in</span>
           </div>
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleLogin)}
-              className=" max-w-lg w-full px-8  "
-            >
+            <form onSubmit={form.handleSubmit(handleLogin)} className="max-w-lg w-full px-8">
               <div className="mt-4">
                 <FormFieldComponent
                   name="userName"
@@ -102,45 +99,34 @@ const LoginPage = () => {
                 <FormField
                   control={form.control}
                   name="password"
-                  render={({ field }) => {
-                    return (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="flex">
-                            <Input
-                              className="font-mono"
-                              placeholder="********"
-                              type={isPasswordVisible ? "text" : "password"}
-                              {...field}
-                            />
-                            <div className="-ml-10 mt-2 ">
-                              {!isPasswordVisible ? (
-                                <EyeOff
-                                  className="cursor-pointer"
-                                  onClick={togglePassword}
-                                />
-                              ) : (
-                                <Eye
-                                  className="cursor-pointer"
-                                  onClick={togglePassword}
-                                />
-                              )}
-                            </div>
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="flex">
+                          <Input
+                            className="font-mono"
+                            placeholder="********"
+                            type={isPasswordVisible ? "text" : "password"}
+                            {...field}
+                          />
+                          <div className="-ml-10 mt-2">
+                            {!isPasswordVisible ? (
+                              <EyeOff className="cursor-pointer" onClick={togglePassword} />
+                            ) : (
+                              <Eye className="cursor-pointer" onClick={togglePassword} />
+                            )}
                           </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
               <div>
-                <Button
-                  type="submit"
-                  className="w-full my-8 bg-blue-500 mt-8  "
-                >
+                <Button type="submit" className="w-full my-8 bg-[#1a3b5d] mt-8">
                   Sign in
                 </Button>
               </div>
@@ -148,12 +134,10 @@ const LoginPage = () => {
           </Form>
           <div>
             <p className="text-sm text-center mb-8">
-              `Don&apos;s have an account?`
+              Don&apos;t have an account?
               <span
-                onClick={() => {
-                  router.push("/signup");
-                }}
-                className="hover:underline text-indigo-700 hover:font-bold"
+                onClick={() => router.push("/signup")}
+                className="hover:underline text-indigo-700 hover:font-bold cursor-pointer"
               >
                 {" "}
                 Sign up
@@ -162,7 +146,6 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
-      {/* </div> */}
     </div>
   );
 };

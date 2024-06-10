@@ -10,6 +10,9 @@ import { Input } from "../ui/input";
 import { ImageIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { uploadPost } from "@/api/query";
+import { usePosts } from "@/context/PostContext";
+import { useToast } from "@/components/ui/use-toast";
+
 
 const postSchema = z.object({
   content: z.string().min(1, "Content is required"),
@@ -22,9 +25,11 @@ export interface post{
 }
 
 const Post = () => {
+  const {fetchAllPosts} = usePosts()
+  const {toast} = useToast()
   const queryClient = useQueryClient()
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const { handleSubmit, control, register, setValue, watch } = useForm({
+  const { handleSubmit, control, setValue, watch, reset } = useForm({
     resolver: zodResolver(postSchema),
   });
 
@@ -32,13 +37,19 @@ const Post = () => {
     mutationFn: uploadPost,
     onSuccess:()=>{
       console.log("post upload successful!")
-      // queryClient.invalidateQueries(['posts'])
+      toast({
+        description:'Post created successfully'
+      })
+      fetchAllPosts()
+      reset()
+      queryClient.invalidateQueries({queryKey: ['posts']})
     }
   })
 
   const onSubmit = (data:any) => {
    console.log(data)
     postUploadMutation.mutate(data)
+   
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
