@@ -23,6 +23,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
           },
           withCredentials: true
         });
+        // console.log(response)
         if (!response) {
           setIsAuthenticated(false);
           router.push('/login');

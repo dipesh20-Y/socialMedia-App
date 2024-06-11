@@ -17,8 +17,8 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    if (data && posts) {
-      const filtered = posts.filter((post) => post.userId === data.id);
+    if (data && posts && Array.isArray(posts)) {
+      const filtered = posts?.filter((post) => post.userId === data.id);
       setUserPosts(filtered);
     }
   }, [data, posts]);
@@ -73,7 +73,7 @@ const Profile = () => {
                   key={post.id}
                   id={post.id}
                   content={post.content}
-                  date={moment(post.createdAt).fromNow()}
+                  date={moment(post.updatedAt).fromNow()}
                   author={data.author}
                   username={data.username}
                   userId={post.userId}

@@ -16,6 +16,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePost, updatePost } from "@/api/query";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useToast } from "../ui/use-toast";
 
 export interface updatePostInterface {
   id: number;
@@ -34,9 +36,12 @@ interface PostProps {
 
 const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId, authorId }) => {
   const queryClient = useQueryClient();
-  const { isLiked, setIsLiked } = usePosts();
+  const router = useRouter()
+  const {  posts, setPosts } = usePosts();
   const { register, handleSubmit } = useForm();
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isLiked, setIsLiked] =  useState<boolean>(false)
+  const {toast} = useToast()
 
   const deletePostMutation = useMutation({
     mutationFn: deletePost,
@@ -49,6 +54,9 @@ const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId
           posts: oldData.posts.filter((post: any) => post.id !== id)
         };
       });
+      toast({
+        description: 'Post deleted successfully'
+      })
     }
   });
 
@@ -60,7 +68,8 @@ const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId
     mutationFn: updatePost,
     onSuccess: () => {
       console.log('Successfully edited');
-      // queryClient.invalidateQueries(['users']); // Optionally, you can invalidate queries to refetch data
+      queryClient.invalidateQueries({queryKey:['posts']}); 
+      router.push('/')
     }
   });
 
@@ -74,6 +83,10 @@ const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId
     };
     postEditMutation.mutate({ id, data });
     setIsEditing(false);
+    const updatedPost = posts?.map((post)=>
+    post.id == id ? {...post, content:formData.content} : post
+    )
+    setPosts(updatedPost)
   };
 
   const handleEditButton = () => {

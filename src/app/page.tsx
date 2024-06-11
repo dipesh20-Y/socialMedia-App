@@ -19,7 +19,7 @@ export default function Home() {
   console.log(posts)
   
   //sorting posts in descending order
-  const sortedPosts = posts.sort((a,b) => new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime())
+  const sortedPosts = Array.isArray(posts) ? posts?.sort((a,b) => new Date(b.updatedAt).getTime()-new Date(a.updatedAt).getTime()) :[]
 
   const { data, isLoading, isSuccess, error } = useQuery({
     queryKey: ["users"],
@@ -96,7 +96,7 @@ export default function Home() {
                 key={post.id}
                 id={post.id}
                 content={post.content}
-                date={moment(post.createdAt).fromNow()}
+                date={moment(post.updatedAt).fromNow()}
                 author={post.user.author}
                 username={post.user.username}
               />

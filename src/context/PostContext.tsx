@@ -16,7 +16,7 @@ interface PostContextType {
 interface Post {
   id: number;
   content: string;
-  createdAt: Date;
+  updatedAt: Date;
   userId: number;
   user: User;
 }

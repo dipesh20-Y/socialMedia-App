@@ -4,6 +4,7 @@ import { login } from "@/app/login/page";
 import axiosInstance from "./axiosInstance";
 import { post } from "@/components/card/PostBody";
 import { updatePostInterface } from "@/components/card/Card";
+import {comment} from '../app/posts/[slug]/page'
 
 export const postAuth = async ({
   author,
@@ -20,6 +21,11 @@ export const postAuth = async ({
   res && console.log(res);
   return res.data;
 };
+
+interface commentInput{
+  postId: number,
+  data:comment
+}
 
 export const loginPost = async ({ userName, password }: login) => {
   const res = await axios.post("http://localhost:5000/api/auth/signin", {
@@ -70,6 +76,20 @@ export const deletePost = async (id:number)=> {
 export const updatePost = async  ({id, data}:updatePostInterface)=>{
   console.log(data, id)
   const res = await axiosInstance.put(`/posts/update/${id}`, data)
+  console.log(res)
+  return res
+}
+
+export const createComment = async ( {postId, data}:commentInput)=>{
+  const content = data.comment
+  console.log(typeof postId)
+  const res = await axiosInstance.post('comments/upload', {postId, content})
+ 
+  return res
+}
+
+export const fetchComments = async () =>{
+  const res = axios.get("http://localhost:5000/api/comments")
   console.log(res)
   return res
 }
