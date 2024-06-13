@@ -4,56 +4,91 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HeartIcon } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Comment from "@/components/card/Comment";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createComment, fetchComments, fetchPostById } from "@/api/query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createComment, fetchAuthor, fetchComments, fetchPostById } from "@/api/query";
 import moment from "moment";
 import { usePosts } from "@/context/PostContext";
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
+import { useToast } from "@/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
 
- const commentSchema = z.object({
+export const commentSchema = z.object({
   comment: z.string().min(1, "comment is required"),
 });
 
 export interface comment {
   comment: string;
- 
 }
+
 
 const PostDetail = ({ params }: { params: { slug: string } }) => {
   // const router = useRouter()
-  const postId=  parseInt(params.slug, 10);
-  console.log(typeof postId)
+  const queryClient = useQueryClient()
+  const postId = parseInt(params.slug, 10);
+  console.log(typeof postId);
   const { isLiked, setIsLiked } = usePosts();
   console.log(params.slug);
-  const { register, reset, handleSubmit, control } = useForm<comment>();
+  const { reset, handleSubmit, control } = useForm<comment>(
+    {
+      resolver:zodResolver(commentSchema)
+    }
+  );
+  const { toast } = useToast();
+  const [receivedComment, setReceivedComment] = useState<any>([]);
+
+  const { data:admin } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchAuthor,
+  });
 
   const { data, isLoading, isSuccess, error } = useQuery({
-    queryKey: ["posts"],
+    queryKey: ["posts", params.slug],
     queryFn: () => fetchPostById(params.slug),
   });
 
-  const {data:comments, isLoading:commentsLoading} = useQuery({
-    queryKey: ['comments'],
-    queryFn:fetchComments
-  })
+  const {
+    data: comments,
+    error: commentError,
+    isLoading: commentsLoading,
+    isSuccess: commentSuccess,
+  } = useQuery({
+    queryKey: ["comments"],
+    queryFn: fetchComments,
+  });
+
+  useEffect(() => {
+    if (comments && commentSuccess) {
+      const filtered = comments.filter(
+        (comment: any) => comment.postId == postId
+      );
+
+      setReceivedComment(filtered);
+    }
+  }, [comments, commentSuccess]);
+
+  console.log(receivedComment);
 
   const createCommentMutation = useMutation({
     mutationFn: createComment,
-    onSuccess:()=>{
-      console.log('comment added successfully')
-    }
-  })
-  
-  const handleCommentSubmit= (data:comment)=>{
-    console.log(data)
-  
-    createCommentMutation.mutate( {postId, data})
-  }
+    onSuccess: () => {
+      toast({
+        description: "comment added successfully",
+      });
+      console.log("comment added successfully");
+      queryClient.invalidateQueries({queryKey:['comments']})
+      reset({comment:''});
+    },
+  });
+
+  const handleCommentSubmit = (data: comment) => {
+    createCommentMutation.mutate({ postId, data });
+    
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -66,7 +101,6 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
   if (error) {
     return <div>{`Error occured: ${error}`}</div>;
   }
-  
 
   return (
     <main className="container mx-auto py-8 px-4 ">
@@ -128,9 +162,19 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
               </div>
             </form>
             <div className="grid gap-4">
-              <Comment />
-              <Comment />
-              <Comment />
+              {receivedComment &&
+                receivedComment.map((comment: any) => (
+                  <Comment
+                    content={comment.content}
+                    id={comment.id}
+                    key={comment.id}
+                    date={moment(comment.createdAt).fromNow()}
+                    userId={admin.id}
+                    author={comment.user.author}
+                    username={comment.user.username}
+                    commentUserId={comment.userId}
+                  />
+                ))}
             </div>
           </div>
         </div>

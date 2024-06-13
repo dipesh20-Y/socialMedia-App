@@ -19,12 +19,21 @@ interface Post {
   updatedAt: Date;
   userId: number;
   user: User;
+  // comment: Comment;
 }
 
 interface User {
   id: number;
   username: string;
   author: string;
+}
+
+interface Comment{
+  id:number;
+  content:string
+  updatedAt: Date
+  userId:number
+  postId: number
 }
 
 const PostsContext = createContext<PostContextType | undefined>(undefined);

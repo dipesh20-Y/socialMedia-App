@@ -41,7 +41,7 @@ const Post = () => {
         description:'Post created successfully'
       })
       fetchAllPosts()
-      reset()
+      reset({content:''})
       queryClient.invalidateQueries({queryKey: ['posts']})
     }
   })
