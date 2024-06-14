@@ -14,6 +14,8 @@ interface PostContextType {
 }
 
 interface Post {
+  imageUrl: string | undefined;
+  likes: Like;
   id: number;
   content: string;
   updatedAt: Date;

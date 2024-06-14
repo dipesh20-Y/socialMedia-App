@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar } from "../ui/avatar";
 import { AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -12,12 +12,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePosts } from "@/context/PostContext";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deletePost, updatePost } from "@/api/query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deletePost, getLikeState, handleLike, handleUnlike, updatePost } from "@/api/query";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useToast } from "../ui/use-toast";
+import Image from 'next/image'
 
 export interface updatePostInterface {
   id: number;
@@ -32,45 +33,82 @@ interface PostProps {
   date: string;
   userId?: number;
   authorId?: number;
+  imageUrl?:string
+  // adminId?: number;
+  // likes: Like[];
 }
 
-const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId, authorId }) => {
+// interface Like {
+// //   id?: number;
+// //   userIdFromLike?: number;
+// //   postId?: number;
+// //   createdAt?: string;
+// // }
+
+const Card: React.FC<PostProps> = ({
+  content,
+  username,
+  author,
+  date,
+  id,
+  userId,
+  authorId,
+  imageUrl
+  // likes,
+  // adminId,
+}) => {
   const queryClient = useQueryClient();
-  const router = useRouter()
-  const {  posts, setPosts } = usePosts();
+  const router = useRouter();
+  const { posts, setPosts } = usePosts();
   const { register, handleSubmit } = useForm();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [isLiked, setIsLiked] =  useState<boolean>(false)
-  const {toast} = useToast()
+  const [isLiked, setIsLiked] = useState<boolean | undefined>(undefined);
+  const { toast } = useToast();
 
   const deletePostMutation = useMutation({
     mutationFn: deletePost,
     onSuccess: () => {
-      console.log('Post deleted successfully');
+      console.log("Post deleted successfully");
       // Update the userPosts array in the cache
-      queryClient.setQueryData(['users'], (oldData: any) => {
+      queryClient.setQueryData(["users"], (oldData: any) => {
         return {
           ...oldData,
-          posts: oldData.posts.filter((post: any) => post.id !== id)
+          posts: oldData.posts.filter((post: any) => post.id !== id),
         };
       });
       toast({
-        description: 'Post deleted successfully'
-      })
-    }
+        description: "Post deleted successfully",
+      });
+    },
   });
 
   const handleDeletePost = () => {
     deletePostMutation.mutate(id);
   };
 
+  const{data:likeState, isSuccess:likeStateSuccess}= useQuery({
+    queryKey:['likes', id],
+    queryFn: ()=> getLikeState(id)
+  })
+
+  useEffect(()=>{
+    if (likeStateSuccess) {
+      if (likeState) {
+        setIsLiked(true)
+      }else{
+        setIsLiked(false)
+      }
+    }
+  },[likeStateSuccess])
+  
+
   const postEditMutation = useMutation({
     mutationFn: updatePost,
     onSuccess: () => {
-      console.log('Successfully edited');
-      queryClient.invalidateQueries({queryKey:['posts']}); 
-      router.push('/')
-    }
+      console.log("Successfully edited");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      router.push("/");
+    },
   });
 
   const handleEditCancel = () => {
@@ -79,19 +117,45 @@ const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId
 
   const handleUpdatePost = (formData: any) => {
     const data = {
-      content: formData.content
+      content: formData.content,
     };
     postEditMutation.mutate({ id, data });
     setIsEditing(false);
-    const updatedPost = posts?.map((post)=>
-    post.id == id ? {...post, content:formData.content} : post
-    )
-    setPosts(updatedPost)
+    const updatedPost = posts?.map((post) =>
+      post.id == id ? { ...post, content: formData.content } : post
+    );
+    setPosts(updatedPost);
   };
 
   const handleEditButton = () => {
     setIsEditing(true);
   };
+
+  const likeMutation = useMutation({
+    mutationFn: handleLike,
+    onSuccess: () => {
+      console.log("liked");
+      queryClient.invalidateQueries({queryKey:['likes']})
+
+    },
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: handleUnlike,
+    onSuccess: () => {
+      console.log("unliked");
+      queryClient.invalidateQueries({queryKey:['likes']})
+
+    },
+  });
+
+  const handleLikeClicked = () => {
+    setIsLiked(!isLiked);
+
+    isLiked ? unlikeMutation.mutate(id) : likeMutation.mutate(id);
+  };
+
+ 
 
   return (
     <div className="bg-gray-100 rounded-lg p-4">
@@ -142,7 +206,21 @@ const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId
           </div>
         ) : (
           <Link href={`posts/${id}`}>
-            <p className="line-clamp-3 p-2 text-gray-700">{content}</p>
+          
+          {imageUrl && 
+          <div className="relative w-full max-w-[600px]">
+             <Image
+            src={imageUrl}
+            width={600}
+            height={400}
+            alt={content}
+            className="rounded-lg overflow-hidden ml-8 "
+          />
+          </div>
+           
+          }
+         
+            <p className="line-clamp-3 p-8  text-gray-700">{content}</p>
           </Link>
         )}
       </div>
@@ -150,7 +228,7 @@ const Card: React.FC<PostProps> = ({ content, username, author, date, id, userId
       <div className="flex items-center justify-between mt-2">
         <Button
           className={`${isLiked ? "text-red-500 " : ""}`}
-          onClick={() => setIsLiked(!isLiked)}
+          onClick={handleLikeClicked}
           variant="ghost"
         >
           <HeartIcon

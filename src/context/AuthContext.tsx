@@ -13,6 +13,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined);
   const router = useRouter();
+  // const refreshToken = localStorage.getItem('refresh') 
+  // console.log(refreshToken)
 
   useEffect(() => {
     const HeartBeat = async () => {

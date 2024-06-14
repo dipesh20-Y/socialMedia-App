@@ -12,6 +12,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { uploadPost } from "@/api/query";
 import { usePosts } from "@/context/PostContext";
 import { useToast } from "@/components/ui/use-toast";
+import axiosInstance from "@/api/axiosInstance";
+import axios from "axios";
 
 
 const postSchema = z.object({
@@ -34,7 +36,25 @@ const Post = () => {
   });
 
   const postUploadMutation = useMutation({
-    mutationFn: uploadPost,
+    mutationFn: async ({content, image}:post) =>{
+      const formData = new FormData();
+      formData.append('file',image)
+
+      const urlResponse = await axios.post('http://localhost:5000/api/upload', formData, {
+        headers:{
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const imageUrl = urlResponse.data
+      console.log(imageUrl)
+
+      const postResponse = await axiosInstance.post("/posts/upload", {
+        content: content,
+        imageUrl: imageUrl
+      })
+      return postResponse.data
+    },
     onSuccess:()=>{
       console.log("post upload successful!")
       toast({
@@ -48,6 +68,7 @@ const Post = () => {
 
   const onSubmit = (data:any) => {
    console.log(data)
+   const {content, image} = data
     postUploadMutation.mutate(data)
    
   };

@@ -78,6 +78,7 @@ const Profile = () => {
                   username={data.username}
                   userId={post.userId}
                   authorId={data.id}
+                  imageUrl={post.imageUrl}
                 />
               ))}
           </div>

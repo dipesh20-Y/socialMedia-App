@@ -4,7 +4,7 @@ import Post from "@/components/card/PostBody";
 import Link from "next/link";
 import Friends from "@/components/card/Friends";
 import { useEffect, useState } from "react";
-import {  fetchAllUsers } from "@/api/query";
+import {  fetchAllUsers, fetchAuthor } from "@/api/query";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -25,6 +25,12 @@ export default function Home() {
     queryKey: ["users"],
     queryFn: fetchAllUsers,
   });
+
+  const {data:admin} = useQuery({
+    queryKey:['users'],
+    queryFn:fetchAuthor
+  })
+
 
   
 
@@ -47,7 +53,7 @@ export default function Home() {
     console.log(data);
   }
 
-  // Ensure `data` is an array before mapping
+  
   const usersArray = Array.isArray(data) ? data : [];
 
   return (
@@ -99,6 +105,9 @@ export default function Home() {
                 date={moment(post.updatedAt).fromNow()}
                 author={post.user.author}
                 username={post.user.username}
+                imageUrl={post.imageUrl}
+                // likes={post.likes}
+                // adminId={admin.id}
               />
             ))}
         </div>

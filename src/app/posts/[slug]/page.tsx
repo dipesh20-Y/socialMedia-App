@@ -9,13 +9,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Comment from "@/components/card/Comment";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createComment, fetchAuthor, fetchComments, fetchPostById } from "@/api/query";
+import {
+  createComment,
+  fetchAuthor,
+  fetchComments,
+  fetchPostById,
+  getLikeCount,
+  getLikeState,
+  handleLike,
+  handleUnlike,
+} from "@/api/query";
 import moment from "moment";
 import { usePosts } from "@/context/PostContext";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 
 export const commentSchema = z.object({
   comment: z.string().min(1, "comment is required"),
@@ -25,23 +35,20 @@ export interface comment {
   comment: string;
 }
 
-
 const PostDetail = ({ params }: { params: { slug: string } }) => {
   // const router = useRouter()
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const postId = parseInt(params.slug, 10);
   console.log(typeof postId);
-  const { isLiked, setIsLiked } = usePosts();
+  const [isLiked, setIsLiked] = useState<boolean | undefined>(undefined);
   console.log(params.slug);
-  const { reset, handleSubmit, control } = useForm<comment>(
-    {
-      resolver:zodResolver(commentSchema)
-    }
-  );
+  const { reset, handleSubmit, control } = useForm<comment>({
+    resolver: zodResolver(commentSchema),
+  });
   const { toast } = useToast();
   const [receivedComment, setReceivedComment] = useState<any>([]);
 
-  const { data:admin } = useQuery({
+  const { data: admin } = useQuery({
     queryKey: ["users"],
     queryFn: fetchAuthor,
   });
@@ -50,6 +57,46 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
     queryKey: ["posts", params.slug],
     queryFn: () => fetchPostById(params.slug),
   });
+  if (isSuccess) {
+    console.log(data);
+  }
+
+  const { data: likeState, isSuccess: likeStateSuccess } = useQuery({
+    queryKey: ["likes", postId],
+    queryFn: () => getLikeState(postId),
+  });
+
+  useEffect(() => {
+    if (likeStateSuccess) {
+      if (likeState) {
+        setIsLiked(true);
+      } else {
+        setIsLiked(false);
+      }
+    }
+  }, [likeStateSuccess]);
+
+  const likeMutation = useMutation({
+    mutationFn: handleLike,
+    onSuccess: () => {
+      console.log("liked");
+      queryClient.invalidateQueries({ queryKey: ["likes"] });
+    },
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: handleUnlike,
+    onSuccess: () => {
+      console.log("unliked");
+      queryClient.invalidateQueries({ queryKey: ["likes"] });
+    },
+  });
+
+  const handleLikeClicked = () => {
+    setIsLiked(!isLiked);
+
+    isLiked ? unlikeMutation.mutate(postId) : likeMutation.mutate(postId);
+  };
 
   const {
     data: comments,
@@ -80,14 +127,13 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
         description: "comment added successfully",
       });
       console.log("comment added successfully");
-      queryClient.invalidateQueries({queryKey:['comments']})
-      reset({comment:''});
+      queryClient.invalidateQueries({ queryKey: ["comments"] });
+      reset({ comment: "" });
     },
   });
 
   const handleCommentSubmit = (data: comment) => {
     createCommentMutation.mutate({ postId, data });
-    
   };
 
   if (isLoading) {
@@ -105,7 +151,7 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
   return (
     <main className="container mx-auto py-8 px-4 ">
       <div>
-        <div className="bg-gray-200 dark:bg-[#1a3b5d] rounded-lg p-4 flex flex-col">
+        <div className="bg-gray-200  rounded-lg p-4 flex flex-col">
           <div className="flex items-center gap-4 mb-4">
             <Avatar className="block">
               <img src="/placeholder.svg" alt="@jaredpalmer" />
@@ -119,13 +165,24 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
             </div>
           </div>
           <div className="flex-1 flex flex-col justify-between">
-            <p>{data?.content}</p>
-            <div className="flex items-center justify-between mt-4">
+            {data.imageUrl && (
+              <div className="relative w-full max-w-[600px]">
+                <Image
+                  src={data.imageUrl}
+                  width={600}
+                  height={400}
+                  alt={data.content}
+                  className="rounded-lg overflow-hidden ml-8 "
+                />
+              </div>
+            )}
+            <p className="text-gray-600 p-8">{data?.content}</p>
+            <div className="flex items-center justify-between ">
               <Button
                 variant="ghost"
                 size="icon"
                 className={`${isLiked ? "text-red-500" : ""}`}
-                onClick={() => setIsLiked(!isLiked)}
+                onClick={handleLikeClicked}
               >
                 <HeartIcon
                   fill={`${isLiked ? "red" : "white"}`}
@@ -135,6 +192,8 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
               </Button>
             </div>
           </div>
+        </div>
+        <div className="bg-gray-200 rounded-lg p-4 mt-8">
           <div className="mt-4 border-t pt-4">
             <form onSubmit={handleSubmit(handleCommentSubmit)}>
               <div className="flex items-center gap-4 mb-4">
@@ -161,7 +220,7 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
                 </div>
               </div>
             </form>
-            <div className="grid gap-4">
+            <div className="grid gap-4 ">
               {receivedComment &&
                 receivedComment.map((comment: any) => (
                   <Comment

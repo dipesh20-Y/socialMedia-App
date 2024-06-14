@@ -92,7 +92,7 @@ const Comment = ({id, content, date, userId, author, username, commentUserId }: 
           <div className="flex items-center justify-between">
             <div>
               <div className="font-bold">{author}</div>
-              <div className="text-gray-500 dark:text-gray-400 text-sm">
+              <div className="text-gray-500 dark:text-gray-400 text-sm mb-2" >
                 @{username} · {date}
               </div>
             </div>
@@ -132,7 +132,7 @@ const Comment = ({id, content, date, userId, author, username, commentUserId }: 
             </form>
           ) : 
           
-            <p>{content}</p>
+            <p className="ml-2">{content}</p>
           }
         </div>
       </div>
