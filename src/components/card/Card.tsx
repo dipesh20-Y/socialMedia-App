@@ -13,37 +13,43 @@ import {
 import Link from "next/link";
 import { usePosts } from "@/context/PostContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deletePost, getLikeState, handleLike, handleUnlike, updatePost } from "@/api/query";
+import {
+  deletePost,
+  getLikeCount,
+  getLikeState,
+  handleLike,
+  handleUnlike,
+  toggleLike,
+  updatePost,
+} from "@/api/query";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useToast } from "../ui/use-toast";
-import Image from 'next/image'
+import Image from "next/image";
 
 export interface updatePostInterface {
   id: number;
   data: any;
 }
 
+
 interface PostProps {
   id: number;
   content: string;
   username?: string;
-  author?: string;
+  author: string;
   date: string;
   userId?: number;
   authorId?: number;
-  imageUrl?:string
+  imageUrl?: string;
   // adminId?: number;
-  // likes: Like[];
+  likes?: Like[];
 }
 
-// interface Like {
-// //   id?: number;
-// //   userIdFromLike?: number;
-// //   postId?: number;
-// //   createdAt?: string;
-// // }
+interface Like {
+  likesCount:string
+}
 
 const Card: React.FC<PostProps> = ({
   content,
@@ -53,10 +59,11 @@ const Card: React.FC<PostProps> = ({
   id,
   userId,
   authorId,
-  imageUrl
-  // likes,
+  imageUrl,
+  // likes
   // adminId,
 }) => {
+  const [likeCount, setLikeCount] = useState<Like>();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { posts, setPosts } = usePosts();
@@ -86,21 +93,20 @@ const Card: React.FC<PostProps> = ({
     deletePostMutation.mutate(id);
   };
 
-  const{data:likeState, isSuccess:likeStateSuccess}= useQuery({
-    queryKey:['likes', id],
-    queryFn: ()=> getLikeState(id)
-  })
+  const { data: likeState, isSuccess: likeStateSuccess } = useQuery({
+    queryKey: ["likes", id],
+    queryFn: () => getLikeState(id),
+  });
 
-  useEffect(()=>{
+  useEffect(() => {
     if (likeStateSuccess) {
       if (likeState) {
-        setIsLiked(true)
-      }else{
-        setIsLiked(false)
+        setIsLiked(true);
+      } else {
+        setIsLiked(false);
       }
     }
-  },[likeStateSuccess])
-  
+  }, [likeStateSuccess]);
 
   const postEditMutation = useMutation({
     mutationFn: updatePost,
@@ -131,38 +137,56 @@ const Card: React.FC<PostProps> = ({
     setIsEditing(true);
   };
 
-  const likeMutation = useMutation({
-    mutationFn: handleLike,
-    onSuccess: () => {
-      console.log("liked");
-      queryClient.invalidateQueries({queryKey:['likes']})
+  const { data: likes, isSuccess: likeCountSuccess } = useQuery({
+    queryKey: ["likes", id],
+    queryFn: () => getLikeCount(id),
+  });
 
+  useEffect(()=>{
+    if(likes && likeCountSuccess){
+      setLikeCount(likes)
+    }
+  },[likes, likeCountSuccess])
+  const toggleLikeMutation = useMutation({
+    mutationFn: toggleLike,
+    onSuccess: () => {
+      // setLikeCount(data.likesCount)
+      // console.log("success and count:", data.likesCount)
+      queryClient.invalidateQueries({ queryKey: ["likes"] });
     },
   });
 
-  const unlikeMutation = useMutation({
-    mutationFn: handleUnlike,
-    onSuccess: () => {
-      console.log("unliked");
-      queryClient.invalidateQueries({queryKey:['likes']})
+  // const likeMutation = useMutation({
+  //   mutationFn: handleLike,
+  //   onSuccess: () => {
+  //     console.log("liked");
+  //     queryClient.invalidateQueries({queryKey:['likes']})
 
-    },
-  });
+  //   },
+  // });
+
+  // const unlikeMutation = useMutation({
+  //   mutationFn: handleUnlike,
+  //   onSuccess: () => {
+  //     console.log("unliked");
+  //     queryClient.invalidateQueries({queryKey:['likes']})
+
+  //   },
+  // });
 
   const handleLikeClicked = () => {
+    toggleLikeMutation.mutate(id);
     setIsLiked(!isLiked);
 
-    isLiked ? unlikeMutation.mutate(id) : likeMutation.mutate(id);
+    // isLiked ? unlikeMutation.mutate(id) : likeMutation.mutate(id);
   };
 
- 
-
   return (
-    <div className="bg-gray-100 rounded-lg p-4">
+    <div className="bg-gray-200 rounded-lg p-4">
       <div className="flex items-center gap-4 mb-4">
         <Avatar>
-          <img src="/placeholder.svg" alt="@jaredpalmer" />
-          <AvatarFallback>JP</AvatarFallback>
+          {/* <img src="/placeholder.svg" alt="@jaredpalmer" /> */}
+          <AvatarFallback>{author[0]}</AvatarFallback>
         </Avatar>
         <div>
           <div className="font-bold">{author}</div>
@@ -206,35 +230,35 @@ const Card: React.FC<PostProps> = ({
           </div>
         ) : (
           <Link href={`posts/${id}`}>
-          
-          {imageUrl && 
-          <div className="relative w-full max-w-[600px]">
-             <Image
-            src={imageUrl}
-            width={600}
-            height={400}
-            alt={content}
-            className="rounded-lg overflow-hidden ml-8 "
-          />
-          </div>
-           
-          }
-         
-            <p className="line-clamp-3 p-8  text-gray-700">{content}</p>
+            <div className="shadow-lg translate-x-2 bg-slate-200 rounded-t-lg">
+              {imageUrl && (
+                <div className="relative w-full max-w-[600px]">
+                  <Image
+                    src={imageUrl}
+                    width={600}
+                    height={400}
+                    alt={content}
+                    layout="responsive"
+                    className="rounded-lg overflow-hidden ml-8 shadow-lg p-2"
+                  />
+                </div>
+              )}
+
+              <p className="line-clamp-3 p-8  text-gray-700">{content}</p>
+            </div>
           </Link>
         )}
       </div>
 
       <div className="flex items-center justify-between mt-2">
-        <Button
-          className={`${isLiked ? "text-red-500 " : ""}`}
-          onClick={handleLikeClicked}
-          variant="ghost"
-        >
-          <HeartIcon
-            fill={`${isLiked ? "red" : "white"}`}
-            className="w-5 h-5"
-          />
+        <Button onClick={handleLikeClicked} variant="ghost" className="hover:bg-transparent">
+          <div className="flex gap-x-2">
+            <HeartIcon
+              fill={`${isLiked ? "red" : "white"}`}
+              className="w-5 h-5 hover:scale-110 "
+            />
+            <span>{likeCount?.likesCount}</span>
+          </div>
         </Button>
         <Link href={`posts/${id}`}>
           <Button variant="ghost">

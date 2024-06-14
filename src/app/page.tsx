@@ -106,8 +106,7 @@ export default function Home() {
                 author={post.user.author}
                 username={post.user.username}
                 imageUrl={post.imageUrl}
-                // likes={post.likes}
-                // adminId={admin.id}
+                likes={post.likes}
               />
             ))}
         </div>

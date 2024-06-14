@@ -18,6 +18,7 @@ import {
   getLikeState,
   handleLike,
   handleUnlike,
+  toggleLike,
 } from "@/api/query";
 import moment from "moment";
 import { usePosts } from "@/context/PostContext";
@@ -37,6 +38,8 @@ export interface comment {
 
 const PostDetail = ({ params }: { params: { slug: string } }) => {
   // const router = useRouter()
+  const [likeCount, setLikeCount] = useState<number | undefined>();
+
   const queryClient = useQueryClient();
   const postId = parseInt(params.slug, 10);
   console.log(typeof postId);
@@ -76,26 +79,37 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
     }
   }, [likeStateSuccess]);
 
-  const likeMutation = useMutation({
-    mutationFn: handleLike,
-    onSuccess: () => {
-      console.log("liked");
+  const toggleLikeMutation = useMutation({
+    mutationFn: toggleLike,
+    onSuccess: (data) => {
+      setLikeCount(data.likesCount);
+      console.log("success and count:", data.likesCount);
       queryClient.invalidateQueries({ queryKey: ["likes"] });
     },
   });
 
-  const unlikeMutation = useMutation({
-    mutationFn: handleUnlike,
-    onSuccess: () => {
-      console.log("unliked");
-      queryClient.invalidateQueries({ queryKey: ["likes"] });
-    },
-  });
+  // const likeMutation = useMutation({
+  //   mutationFn: handleLike,
+  //   onSuccess: () => {
+  //     console.log("liked");
+  //     queryClient.invalidateQueries({ queryKey: ["likes"] });
+  //   },
+  // });
+
+  // const unlikeMutation = useMutation({
+  //   mutationFn: handleUnlike,
+  //   onSuccess: () => {
+  //     console.log("unliked");
+  //     queryClient.invalidateQueries({ queryKey: ["likes"] });
+  //   },
+  // });
 
   const handleLikeClicked = () => {
+    toggleLikeMutation.mutate(postId);
+
     setIsLiked(!isLiked);
 
-    isLiked ? unlikeMutation.mutate(postId) : likeMutation.mutate(postId);
+    // isLiked ? unlikeMutation.mutate(postId) : likeMutation.mutate(postId);
   };
 
   const {
@@ -118,7 +132,7 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
     }
   }, [comments, commentSuccess]);
 
-  console.log(receivedComment);
+  
 
   const createCommentMutation = useMutation({
     mutationFn: createComment,
@@ -154,8 +168,7 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
         <div className="bg-gray-200  rounded-lg p-4 flex flex-col">
           <div className="flex items-center gap-4 mb-4">
             <Avatar className="block">
-              <img src="/placeholder.svg" alt="@jaredpalmer" />
-              <AvatarFallback>JP</AvatarFallback>
+              <AvatarFallback>{data?.user?.username[0]}</AvatarFallback>
             </Avatar>
             <div>
               <div className="font-bold">{data?.user?.author}</div>
@@ -184,11 +197,13 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
                 className={`${isLiked ? "text-red-500" : ""}`}
                 onClick={handleLikeClicked}
               >
-                <HeartIcon
-                  fill={`${isLiked ? "red" : "white"}`}
-                  className="h-4 w-4"
-                />
-                <span className="sr-only">Like</span>
+                <div className="flex gap-x-2">
+                  <HeartIcon
+                    fill={`${isLiked ? "red" : "white"}`}
+                    className="w-5 h-5"
+                  />
+                  <span>{likeCount}</span>
+                </div>
               </Button>
             </div>
           </div>

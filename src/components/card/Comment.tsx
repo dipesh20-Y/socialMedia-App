@@ -85,8 +85,7 @@ const Comment = ({id, content, date, userId, author, username, commentUserId }: 
     <div>
       <div className="flex items-center gap-4">
         <Avatar>
-          <img src="/placeholder.svg" alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
+          <AvatarFallback>{author[0]}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
           <div className="flex items-center justify-between">

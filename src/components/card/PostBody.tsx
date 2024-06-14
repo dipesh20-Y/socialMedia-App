@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useState , useRef} from "react";
 import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,62 +15,70 @@ import { useToast } from "@/components/ui/use-toast";
 import axiosInstance from "@/api/axiosInstance";
 import axios from "axios";
 
-
 const postSchema = z.object({
   content: z.string().min(1, "Content is required"),
   image: z.any().optional(),
 });
 
-export interface post{
-  content:string,
-  image:File
+export interface post {
+  content: string;
+  image: File;
 }
 
 const Post = () => {
-  const {fetchAllPosts} = usePosts()
-  const {toast} = useToast()
-  const queryClient = useQueryClient()
+  const { fetchAllPosts } = usePosts();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { handleSubmit, control, setValue, watch, reset } = useForm({
     resolver: zodResolver(postSchema),
   });
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
   const postUploadMutation = useMutation({
-    mutationFn: async ({content, image}:post) =>{
+    mutationFn: async ({ content, image }: post) => {
       const formData = new FormData();
-      formData.append('file',image)
+      formData.append("file", image);
 
-      const urlResponse = await axios.post('http://localhost:5000/api/upload', formData, {
-        headers:{
-          'Content-Type': 'multipart/form-data'
+      const urlResponse = await axios.post(
+        "http://localhost:5000/api/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
+      );
 
-      const imageUrl = urlResponse.data
-      console.log(imageUrl)
+      const imageUrl = urlResponse.data;
+      console.log(imageUrl);
 
       const postResponse = await axiosInstance.post("/posts/upload", {
         content: content,
-        imageUrl: imageUrl
-      })
-      return postResponse.data
+        imageUrl: imageUrl,
+      });
+      return postResponse.data;
     },
-    onSuccess:()=>{
-      console.log("post upload successful!")
+    onSuccess: () => {
+      console.log("post upload successful!");
       toast({
-        description:'Post created successfully'
-      })
-      fetchAllPosts()
-      reset({content:''})
-      queryClient.invalidateQueries({queryKey: ['posts']})
-    }
-  })
+        description: "Post created successfully",
+      });
+      fetchAllPosts();
+      reset({ content: ""});
+      if(fileInputRef.current){
+        fileInputRef.current.value=""
+      }
+      setImagePreview(null)
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
 
-  const onSubmit = (data:any) => {
-   console.log(data)
-   const {content, image} = data
-    postUploadMutation.mutate(data)
-   
+  const onSubmit = (data: any) => {
+    console.log(data);
+    const { content, image } = data;
+    postUploadMutation.mutate(data);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +89,6 @@ const Post = () => {
       setValue("image", file);
     }
   };
-  
 
   const selectedImage = watch("image");
 
@@ -104,7 +111,7 @@ const Post = () => {
               />
             )}
           />
-          
+
           <Button
             variant="ghost"
             type="button"
@@ -115,7 +122,6 @@ const Post = () => {
                 imageInput.click();
               }
             }}
-            
           >
             <ImageIcon className="h-4 w-4" />
             <span className="sr-only">Add image</span>
@@ -126,6 +132,7 @@ const Post = () => {
             accept="image/*"
             style={{ display: "none" }}
             onChange={handleImageChange}
+            ref={fileInputRef}
           />
         </div>
         {imagePreview && (

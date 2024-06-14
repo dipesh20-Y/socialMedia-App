@@ -123,6 +123,12 @@ export const getLikeState = async (id: number) => {
 };
 
 export const getLikeCount = async (id: number) => {
-  const res = await axiosInstance.get(`likes/${id}`);
+  const res = await axiosInstance.get(`likes/count/${id}`);
+  console.log(res.data)
+  return res.data;
+};
+
+export const toggleLike = async (id: number) => {
+  const res = await axiosInstance.post(`likes/${id}/like`);
   return res.data;
 };
