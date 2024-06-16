@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 import {
   Form,
@@ -43,6 +44,8 @@ const LoginPage = () => {
     },
   });
 
+ const { setIsAuthenticated} = useAuth()
+
   const LoginMutation = useMutation({
     mutationFn: loginPost,
     onSuccess: (res) => {
@@ -55,6 +58,7 @@ const LoginPage = () => {
         toast({
           description: "Login Successful!",
         });
+        setIsAuthenticated(true)
         router.push("/"); // This should now correctly navigate to the home page
       } else {
         console.log("Unexpected response status:", res.status);

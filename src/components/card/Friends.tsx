@@ -4,8 +4,7 @@ import { Avatar, AvatarFallback } from '../ui/avatar'
 
 const Friends = (user:any) => {
 
-  console.log(user)
-  
+ 
   return (
     <div className="grid my-4 hover:bg-white hover:rounded-lg hover:translate-x-1   ">
     <div className="flex gap-2">

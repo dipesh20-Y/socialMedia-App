@@ -43,7 +43,7 @@ export const logout = async () => {
 
 export const fetchAuthor = async () => {
   const res = await axiosInstance.get("users/author");
-  res && console.log(res);
+  res && console.log(res.data);
   return res.data;
 };
 

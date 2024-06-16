@@ -19,13 +19,13 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const HeartBeat = async () => {
       try {
-        const response = await axios.post('api/auth/refresh-token', {}, {
+        const response = await axios.post('http://localhost:5000/api/auth/refresh-token', {}, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('refresh')}`
           },
           withCredentials: true
         });
-        // console.log(response)
+        console.log('heartbeat',     response)
         if (!response) {
           setIsAuthenticated(false);
           router.push('/login');

@@ -6,10 +6,8 @@ import Header from "./header/page";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { PostsProvider } from "@/context/PostContext";
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-// import AuthCheck from "@/components/card/AuthCheck";
+import { ValidateUser } from "@/components/authvalidation/Validation";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +21,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
+  
 //  <AuthCheck />
   return (
     <ReactQueryProvider>
@@ -31,6 +29,7 @@ export default function RootLayout({
         <PostsProvider>
           <html lang="en">
             <body className={`${inter.className} bg-[#D6D6D6]`}>
+              <ValidateUser />
               <Header />
               {children}
               <Toaster />

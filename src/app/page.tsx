@@ -15,31 +15,31 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const { posts } = usePosts();
+ 
 
   console.log(posts)
   
   //sorting posts in descending order
   const sortedPosts = Array.isArray(posts) ? posts?.sort((a,b) => new Date(b.updatedAt).getTime()-new Date(a.updatedAt).getTime()) :[]
 
+  const {data:admin, isSuccess:adminSuccess} = useQuery({
+    queryKey:['user'],
+    queryFn:fetchAuthor
+  })
+
   const { data, isLoading, isSuccess, error } = useQuery({
     queryKey: ["users"],
     queryFn: fetchAllUsers,
   });
 
-  const {data:admin} = useQuery({
-    queryKey:['users'],
-    queryFn:fetchAuthor
-  })
+ if(isSuccess){
+  console.log(data)
+ }
 
+  if (adminSuccess) {
+    console.log(admin)
+  }
 
-  
-
-  useEffect(() => {
-    console.log(isAuthenticated)
-    if (isAuthenticated != undefined && !isAuthenticated) {
-      router.push("login");
-    }
-  }, [isAuthenticated, router]);
 
   if (isLoading || !isAuthenticated) {
     return <div>Loading....</div>;
@@ -49,12 +49,14 @@ export default function Home() {
     return <div>Error loading data</div>;
   }
 
-  if (isSuccess) {
-    console.log(data);
-  }
+
 
   
   const usersArray = Array.isArray(data) ? data : [];
+
+  const filteredUserArray = usersArray.filter((user)=> user.id != admin?.id)
+  
+  filteredUserArray && console.log(filteredUserArray)
 
   return (
     <main className="bg-[#D6D6D6] container mx-auto py-8 grid md:grid-cols-[250px_1fr_300px] gap-8">
@@ -113,7 +115,7 @@ export default function Home() {
       </div>
       <div className="bg-stone-100 rounded-lg p-4 h-fit">
         <h2 className="text-lg font-bold font-mono mb-4">Friends</h2>
-        {usersArray?.map((user: any) => (
+        {filteredUserArray?.map((user: any) => (
           <Friends key={user.id} id={user.id} user={user} />
         ))}
       </div>

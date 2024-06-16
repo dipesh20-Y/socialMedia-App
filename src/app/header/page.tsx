@@ -5,7 +5,6 @@
   import {  SearchIcon, TwitterIcon } from 'lucide-react'
   import React from 'react'
   import { LogOut } from 'lucide-react'
-  import axios from 'axios'
   import {useRouter} from 'next/navigation'
   import { logout } from '@/api/query'
   import { useMutation } from '@tanstack/react-query'

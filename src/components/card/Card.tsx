@@ -23,7 +23,7 @@ import {
   updatePost,
 } from "@/api/query";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useToast } from "../ui/use-toast";
 import Image from "next/image";
@@ -67,7 +67,7 @@ const Card: React.FC<PostProps> = ({
   const queryClient = useQueryClient();
   const router = useRouter();
   const { posts, setPosts } = usePosts();
-  const { register, handleSubmit } = useForm();
+  const { control, handleSubmit } = useForm();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isLiked, setIsLiked] = useState<boolean | undefined>(undefined);
   const { toast } = useToast();
@@ -150,35 +150,15 @@ const Card: React.FC<PostProps> = ({
   const toggleLikeMutation = useMutation({
     mutationFn: toggleLike,
     onSuccess: () => {
-      // setLikeCount(data.likesCount)
-      // console.log("success and count:", data.likesCount)
       queryClient.invalidateQueries({ queryKey: ["likes"] });
     },
   });
 
-  // const likeMutation = useMutation({
-  //   mutationFn: handleLike,
-  //   onSuccess: () => {
-  //     console.log("liked");
-  //     queryClient.invalidateQueries({queryKey:['likes']})
-
-  //   },
-  // });
-
-  // const unlikeMutation = useMutation({
-  //   mutationFn: handleUnlike,
-  //   onSuccess: () => {
-  //     console.log("unliked");
-  //     queryClient.invalidateQueries({queryKey:['likes']})
-
-  //   },
-  // });
 
   const handleLikeClicked = () => {
     toggleLikeMutation.mutate(id);
     setIsLiked(!isLiked);
 
-    // isLiked ? unlikeMutation.mutate(id) : likeMutation.mutate(id);
   };
 
   return (
@@ -212,12 +192,27 @@ const Card: React.FC<PostProps> = ({
         {isEditing ? (
           <div>
             <form onSubmit={handleSubmit(handleUpdatePost)}>
+            
+            <Controller
+            name="content"
+            control={control}
+            defaultValue={content}
+            rules={{required:true}}
+            render={({field})=>(
               <Textarea
+              {...field}
+              />
+
+            )}
+            />
+            
+            
+            {/* <Textarea
                 {...register("content", {
                   required: true,
                 })}
                 defaultValue={content}
-              />
+              /> */}
               <div className="flex justify-end space-x-4 my-2 pb-2">
                 <Button>
                   <Check />
