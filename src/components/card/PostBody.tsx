@@ -9,7 +9,6 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ImageIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { uploadPost } from "@/api/query";
 import { usePosts } from "@/context/PostContext";
 import { useToast } from "@/components/ui/use-toast";
 import axiosInstance from "@/api/axiosInstance";
