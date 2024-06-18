@@ -2,19 +2,18 @@
 import React, { useEffect, useState } from "react";
 import Card from "@/components/card/Card";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAuthor } from "@/api/query";
+import { fetchAuthor, getUserById } from "@/api/query";
 import { usePosts } from "@/context/PostContext";
 import moment from "moment";
-import { Button } from "@/components/ui/button";
-import EditProfile from "@/components/form/Editprofile";
 import Image from "next/image";
 
-const Profile = () => {
+const Profile = ({ params }: { params: { slug: string } }) => {
+    console.log(params.slug)
   const { posts } = usePosts();
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const { data, isLoading, isSuccess, error } = useQuery({
-    queryKey: ["user"],
-    queryFn: fetchAuthor,
+    queryKey: ["friends"],
+    queryFn: () => getUserById(params.slug),
   });
 
   useEffect(() => {
@@ -26,7 +25,6 @@ const Profile = () => {
 
   if (isSuccess) {
     console.log(data);
-    console.log(posts);
   }
 
   if (isLoading) {
@@ -54,22 +52,24 @@ const Profile = () => {
               <Image
                 width={80}
                 height={80}
-                src={data?.profilePicUrl ? data.profilePicUrl : '/dipesh.jpeg'}
+                src={data.profilePicUrl}
                 alt="profile"
                 className="h-20 w-20 md:h-24 md:w-24 rounded-full border-4 border-white"
               />
             </div>
             <div className="flex items-center justify-between w-full mb-2">
-            <div className="ml-4 md:ml-6 flex-1">
-              <h2 className="text-lg font-bold md:text-2xl">{data?.author}</h2>
-              <p className="text-gray-500 text-sm md:text-base">
-                @{data?.username}
-              </p>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <EditProfile author={data?.author} username={data?.username}  />
+              <div className="ml-4 md:ml-6 flex-1">
+                <h2 className="text-lg font-bold md:text-2xl">
+                  {data?.author}
+                </h2>
+                <p className="text-gray-500 text-sm md:text-base">
+                  @{data?.username}
+                </p>
+              </div>
+              {/* <div className="flex flex-col space-y-2">
+              <EditProfile author={data?.author} username={data?.username} />
               <Button variant='destructive'>Delete User</Button>
-            </div>
+            </div> */}
             </div>
           </div>
 
@@ -86,7 +86,6 @@ const Profile = () => {
                   userId={post.userId}
                   authorId={data.id}
                   imageUrl={post.imageUrl}
-                  profilePic={data.profilePicUrl}
                 />
               ))}
           </div>

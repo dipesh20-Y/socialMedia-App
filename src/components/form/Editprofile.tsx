@@ -15,11 +15,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import axiosInstance from "@/api/axiosInstance"
 import axios from "axios"
 import { useToast } from "../ui/use-toast"
+import { useRouter } from "next/navigation"
 
 interface UserProfile {
   username: string;
   author: string;
   image?: File;
+ 
 }
 
 const userSchema = z.object({
@@ -35,6 +37,7 @@ export default function EditProfile({author, username, image}: UserProfile) {
     resolver: zodResolver(userSchema)
   })
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const router = useRouter()
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -76,6 +79,7 @@ export default function EditProfile({author, username, image}: UserProfile) {
         description:"User updated successfully"
       })
       queryClient.invalidateQueries({queryKey:['user']})
+      router.push(`profile`)
     }
   })
 

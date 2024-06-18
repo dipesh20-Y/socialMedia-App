@@ -25,6 +25,7 @@ interface Post {
 }
 
 interface User {
+  profilePicUrl: string | undefined;
   id: number;
   username: string;
   author: string;

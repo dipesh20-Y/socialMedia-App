@@ -4,42 +4,45 @@ import Post from "@/components/card/PostBody";
 import Link from "next/link";
 import Friends from "@/components/card/Friends";
 import { useEffect, useState } from "react";
-import {  fetchAllUsers, fetchAuthor } from "@/api/query";
+import { fetchAllUsers, fetchAuthor } from "@/api/query";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { usePosts } from "@/context/PostContext";
-import moment from 'moment'
+import moment from "moment";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const { posts } = usePosts();
- 
 
-  console.log(posts)
-  
+  console.log(posts);
+
   //sorting posts in descending order
-  const sortedPosts = Array.isArray(posts) ? posts?.sort((a,b) => new Date(b.updatedAt).getTime()-new Date(a.updatedAt).getTime()) :[]
+  const sortedPosts = Array.isArray(posts)
+    ? posts?.sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
+    : [];
 
-  const {data:admin, isSuccess:adminSuccess} = useQuery({
-    queryKey:['user'],
-    queryFn:fetchAuthor
-  })
+  const { data: admin, isSuccess: adminSuccess } = useQuery({
+    queryKey: ["user"],
+    queryFn: fetchAuthor,
+  });
 
   const { data, isLoading, isSuccess, error } = useQuery({
     queryKey: ["users"],
     queryFn: fetchAllUsers,
   });
 
- if(isSuccess){
-  console.log(data)
- }
-
-  if (adminSuccess) {
-    console.log(admin)
+  if (isSuccess) {
+    console.log(data);
   }
 
+  if (adminSuccess) {
+    console.log(admin);
+  }
 
   if (isLoading || !isAuthenticated) {
     return <div>Loading....</div>;
@@ -49,14 +52,11 @@ export default function Home() {
     return <div>Error loading data</div>;
   }
 
-
-
-  
   const usersArray = Array.isArray(data) ? data : [];
 
-  const filteredUserArray = usersArray.filter((user)=> user.id != admin?.id)
-  
-  filteredUserArray && console.log(filteredUserArray)
+  const filteredUserArray = usersArray.filter((user) => user.id != admin?.id);
+
+  filteredUserArray && console.log(filteredUserArray);
 
   return (
     <main className="bg-[#D6D6D6] container mx-auto py-8 grid md:grid-cols-[250px_1fr_300px] gap-8">
@@ -109,6 +109,7 @@ export default function Home() {
                 username={post.user.username}
                 imageUrl={post.imageUrl}
                 likes={post.likes}
+                profilePic={post.user.profilePicUrl}
               />
             ))}
         </div>
@@ -116,7 +117,14 @@ export default function Home() {
       <div className="bg-stone-100 rounded-lg p-4 h-fit">
         <h2 className="text-lg font-bold font-mono mb-4">Friends</h2>
         {filteredUserArray?.map((user: any) => (
-          <Friends key={user.id} id={user.id} user={user} />
+          <Friends 
+          key={user?.id} 
+          id={user?.id} 
+          author={user?.author}
+          username={user?.username}
+          image={user?.profilePicUrl}
+          />
+          
         ))}
       </div>
     </main>

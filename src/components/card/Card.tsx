@@ -17,8 +17,6 @@ import {
   deletePost,
   getLikeCount,
   getLikeState,
-  handleLike,
-  handleUnlike,
   toggleLike,
   updatePost,
 } from "@/api/query";
@@ -33,7 +31,6 @@ export interface updatePostInterface {
   data: any;
 }
 
-
 interface PostProps {
   id: number;
   content: string;
@@ -43,12 +40,12 @@ interface PostProps {
   userId?: number;
   authorId?: number;
   imageUrl?: string;
-  // adminId?: number;
+  profilePic?: string;
   likes?: Like[];
 }
 
 interface Like {
-  likesCount:string
+  likesCount: string;
 }
 
 const Card: React.FC<PostProps> = ({
@@ -60,6 +57,7 @@ const Card: React.FC<PostProps> = ({
   userId,
   authorId,
   imageUrl,
+  profilePic,
   // likes
   // adminId,
 }) => {
@@ -142,11 +140,11 @@ const Card: React.FC<PostProps> = ({
     queryFn: () => getLikeCount(id),
   });
 
-  useEffect(()=>{
-    if(likes && likeCountSuccess){
-      setLikeCount(likes)
+  useEffect(() => {
+    if (likes && likeCountSuccess) {
+      setLikeCount(likes);
     }
-  },[likes, likeCountSuccess])
+  }, [likes, likeCountSuccess]);
   const toggleLikeMutation = useMutation({
     mutationFn: toggleLike,
     onSuccess: () => {
@@ -154,19 +152,20 @@ const Card: React.FC<PostProps> = ({
     },
   });
 
-
   const handleLikeClicked = () => {
     toggleLikeMutation.mutate(id);
     setIsLiked(!isLiked);
-
   };
 
   return (
     <div className="bg-gray-200 rounded-lg p-4">
       <div className="flex items-center gap-4 mb-4">
-        <Avatar>
-          {/* <img src="/placeholder.svg" alt="@jaredpalmer" /> */}
-          <AvatarFallback>{author[0]}</AvatarFallback>
+        <Avatar className="relative">
+          {profilePic ? (
+            <Image src={profilePic} alt={`@${author}`} fill priority={true} />
+          ) : (
+            <AvatarFallback>{author[0]}</AvatarFallback>
+          )}
         </Avatar>
         <div>
           <div className="font-bold">{author}</div>
@@ -192,27 +191,14 @@ const Card: React.FC<PostProps> = ({
         {isEditing ? (
           <div>
             <form onSubmit={handleSubmit(handleUpdatePost)}>
-            
-            <Controller
-            name="content"
-            control={control}
-            defaultValue={content}
-            rules={{required:true}}
-            render={({field})=>(
-              <Textarea
-              {...field}
+              <Controller
+                name="content"
+                control={control}
+                defaultValue={content}
+                rules={{ required: true }}
+                render={({ field }) => <Textarea {...field} />}
               />
 
-            )}
-            />
-            
-            
-            {/* <Textarea
-                {...register("content", {
-                  required: true,
-                })}
-                defaultValue={content}
-              /> */}
               <div className="flex justify-end space-x-4 my-2 pb-2">
                 <Button>
                   <Check />
@@ -246,7 +232,11 @@ const Card: React.FC<PostProps> = ({
       </div>
 
       <div className="flex items-center justify-between mt-2">
-        <Button onClick={handleLikeClicked} variant="ghost" className="hover:bg-transparent">
+        <Button
+          onClick={handleLikeClicked}
+          variant="ghost"
+          className="hover:bg-transparent"
+        >
           <div className="flex gap-x-2">
             <HeartIcon
               fill={`${isLiked ? "red" : "white"}`}

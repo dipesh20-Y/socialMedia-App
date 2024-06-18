@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, useState , useRef} from "react";
+import React, { ChangeEvent, useState, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,11 +8,13 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ImageIcon } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePosts } from "@/context/PostContext";
 import { useToast } from "@/components/ui/use-toast";
 import axiosInstance from "@/api/axiosInstance";
 import axios from "axios";
+import { fetchAuthor } from "@/api/query";
+import Image from "next/image";
 
 const postSchema = z.object({
   content: z.string().min(1, "Content is required"),
@@ -33,7 +35,12 @@ const Post = () => {
     resolver: zodResolver(postSchema),
   });
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { data: admin } = useQuery({
+    queryKey: ["user"],
+    queryFn: fetchAuthor,
+  });
 
   const postUploadMutation = useMutation({
     mutationFn: async ({ content, image }: post) => {
@@ -65,11 +72,11 @@ const Post = () => {
         description: "Post created successfully",
       });
       fetchAllPosts();
-      reset({ content: ""});
-      if(fileInputRef.current){
-        fileInputRef.current.value=""
+      reset({ content: "" });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
-      setImagePreview(null)
+      setImagePreview(null);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
@@ -95,9 +102,17 @@ const Post = () => {
     <div className="bg-gray-100 rounded-lg p-4 mb-8">
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="flex items-center gap-4">
-          <Avatar className="block">
-            <img src="/dipesh.jpeg" alt="@dipesh" />
-            <AvatarFallback> D</AvatarFallback>
+          <Avatar className="relative">
+            {admin?.profilePicUrl ? (
+              <Image
+                src={admin?.profilePicUrl}
+                alt={`@${admin?.username}`}
+                fill
+                priority={true}
+              />
+            ) : (
+              <AvatarFallback> {admin?.author[0]}</AvatarFallback>
+            )}
           </Avatar>
           <Controller
             name="content"

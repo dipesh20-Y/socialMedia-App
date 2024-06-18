@@ -107,15 +107,15 @@ export const updateComment = async ({ id, data }: UpdateCommentInterface) => {
   return res;
 };
 
-export const handleLike = async (id: number) => {
-  const res = await axiosInstance.post(`likes/${id}`);
-  return res;
-};
+// export const handleLike = async (id: number) => {
+//   const res = await axiosInstance.post(`likes/${id}`);
+//   return res;
+// };
 
-export const handleUnlike = async (id: number) => {
-  const res = await axiosInstance.delete(`likes/delete/${id}`);
-  return res;
-};
+// export const handleUnlike = async (id: number) => {
+//   const res = await axiosInstance.delete(`likes/delete/${id}`);
+//   return res;
+// };
 
 export const getLikeState = async (id: number) => {
   const res = await axiosInstance.get(`likes/state/${id}`);
@@ -132,3 +132,8 @@ export const toggleLike = async (id: number) => {
   const res = await axiosInstance.post(`likes/${id}/like`);
   return res.data;
 };
+
+export const getUserById = async (userId: string) =>{
+  const res = await axios.get(`http://localhost:5000/api/users/${userId}`)
+  return res.data
+}

@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HeartIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Comment from "@/components/card/Comment";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -14,10 +12,7 @@ import {
   fetchAuthor,
   fetchComments,
   fetchPostById,
-  getLikeCount,
   getLikeState,
-  handleLike,
-  handleUnlike,
   toggleLike,
 } from "@/api/query";
 import moment from "moment";
@@ -57,7 +52,7 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
   });
 
   const { data, isLoading, isSuccess, error } = useQuery({
-    queryKey: ["posts", params.slug],
+    queryKey: ["post", params.slug],
     queryFn: () => fetchPostById(params.slug),
   });
   if (isSuccess) {
@@ -88,28 +83,10 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
     },
   });
 
-  // const likeMutation = useMutation({
-  //   mutationFn: handleLike,
-  //   onSuccess: () => {
-  //     console.log("liked");
-  //     queryClient.invalidateQueries({ queryKey: ["likes"] });
-  //   },
-  // });
-
-  // const unlikeMutation = useMutation({
-  //   mutationFn: handleUnlike,
-  //   onSuccess: () => {
-  //     console.log("unliked");
-  //     queryClient.invalidateQueries({ queryKey: ["likes"] });
-  //   },
-  // });
-
   const handleLikeClicked = () => {
     toggleLikeMutation.mutate(postId);
 
     setIsLiked(!isLiked);
-
-    // isLiked ? unlikeMutation.mutate(postId) : likeMutation.mutate(postId);
   };
 
   const {
@@ -131,8 +108,6 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
       setReceivedComment(filtered);
     }
   }, [comments, commentSuccess]);
-
-  
 
   const createCommentMutation = useMutation({
     mutationFn: createComment,
@@ -212,9 +187,17 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
           <div className="mt-4 border-t pt-4">
             <form onSubmit={handleSubmit(handleCommentSubmit)}>
               <div className="flex items-center gap-4 mb-4">
-                <Avatar>
-                  <img src="/dipesh.jpeg" alt="@jaredpalmer" />
-                  <AvatarFallback>JP</AvatarFallback>
+                <Avatar className="relative">
+                  {admin?.profilePicUrl ? (
+                    <Image
+                      src={admin?.profilePicUrl}
+                      alt={`@${admin?.username}`}
+                      fill
+                      priority={true}
+                    />
+                  ) : (
+                    <AvatarFallback>{admin?.username[0]}</AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="flex-1">
                   <h3 className="font-bold mb-8 text-2xl">Comments</h3>
@@ -247,6 +230,7 @@ const PostDetail = ({ params }: { params: { slug: string } }) => {
                     author={comment.user.author}
                     username={comment.user.username}
                     commentUserId={comment.userId}
+                    image={comment?.user.profilePicUrl}
                   />
                 ))}
             </div>

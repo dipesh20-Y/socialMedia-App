@@ -8,6 +8,7 @@ import { toast } from "../ui/use-toast";
 import { Controller, useForm } from "react-hook-form";
 import { commentSchema, comment } from "@/app/posts/[slug]/page";
 import { Textarea } from "../ui/textarea";
+import Image from "next/image";
 
 interface comments {
   id: number;
@@ -17,6 +18,7 @@ interface comments {
   author: string;
   username: string;
   commentUserId?: number;
+  image?: string;
 }
 
 export interface UpdateCommentInterface {
@@ -32,6 +34,7 @@ const Comment = ({
   author,
   username,
   commentUserId,
+  image,
 }: comments) => {
   const [isUserValid, setIsUserValid] = useState<boolean>(false);
   const [isEditEnabled, setIsEditEnabled] = useState<boolean>(false);
@@ -89,8 +92,14 @@ const Comment = ({
   return (
     <div>
       <div className="flex items-center gap-4">
-        <Avatar>
+        <Avatar className="relative">
+          {image ? (
+        <Image src={image } alt={`@${username}`} fill priority={true}/>
+
+          ) : (
           <AvatarFallback>{author[0]}</AvatarFallback>
+
+          )}
         </Avatar>
         <div className="flex-1">
           <div className="flex items-center justify-between">
